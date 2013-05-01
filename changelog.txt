@@ -1,0 +1,94 @@
+v0.172b	12/30/03
+	
+	Added playlist on/off option.  Spacebar always starts pattern from the beginning.
+
+v0.171b	12/23/03
+	
+	Bugfixes, added key commands for channel number, note number, and mute.
+
+v0.17b	12/23/03
+
+	Major GUI enhancements.  Added midi note number selection box to rows.
+
+v0.162b	12/19/03
+
+	Added macros for common patterns eg. every beat, eigth notes, 2&4 etc.  User configurable.  Put all row logic into the row gui abstraction so an entire row can be added just by creating a 'row' instance.
+
+v0.16b	12/17/03
+	
+	Added key commands for editing patterns.  qwerty keys enable ticks,  '[' and ']' now move the row focus up and down.  Note the up and down arrow keys are not mapped in pd still as of v0.37.
+
+v0.15b	10/06/03
+
+	Getting ready for release.
+
+v0.14b	09/09/03 
+
+	Put playlist and led logic in subpatches instead of an abstractions.
+
+v0.131b	09/09/03 
+
+	Many bugs fixed, changed to beta.  Got rid of temp .pd files.
+
+v0.131a	09/09/03
+
+	Point release created to focus on bugs.
+
+v0.13a	09/08/03
+
+	More cleanup.  Many sections now in subpatches.  Tried to make anything that isn't reused a subpatch rather than an abstraction to cut down on the number of files.  Playlist fixed, pattern chase on/off implemented.  Playlist length can now be set.  Playlist increment method changed, now playlist position can be set by clicking directly in the radio button box. Bugs in pattern read to gui.  When switching to an empty pattern, data overwrites previous pattern.
+	
+v0.12a	09/05/03
+
+	Note data is now indepenent of gui, but playlist needs work. Buggy implementation of led chase/nochase. Back to alpha.  Buggy.
+
+v0.11b  09/04/03 	
+
+	Added playlist
+	Initial key command spacebar starts/stops sequencer.
+	Pattern up/down using +/- keys on numpad.
+	
+v0.10b  09/03/03 
+	First beta.  Most implemented features stable.  
+	Tempo in BPM.
+	Pattern switching.
+	GUI cleaned up.
+	LEDs are red now.
+
+v0.05a  08/29/03 
+	Added pattern tables to sequencer rows for pattern switching. 
+
+v0.02a  08/24/03 
+	Basic gui abstractions separated from row logic abstractions.
+
+v0.01a	08/21/03 
+	First ideas on sequencer.
+
+ToDo: number indicates priority	
+
+2-Clock to MIDI sync.  Use midirealtimein or midiclkin objects (undocumented)
+2-Send MIDI sync.  Raw MIDI out?
+done  -Read pattern ticks directly from tables, making gui independent of play position.
+done  -Add playlist/song mode.
+-Pattern banks
+3-Dynamically add patterns - resize tables accordingly on the fly.
+done-Integrate gui and row logic? May allow simpler addition of sequencer rows.
+3-Add melodic sequencer module for basslines etc.  12 position radio button for keys?
+done-Add midi note select.
+3-Solo? Groups?
+done-make hitting start again reset play position.
+done  -key commands for start/stop/pattern select, etc.
+done  -focus channel indicator keycommand.  map 16 keys of keyboard to ticks of chan in focus
+1-pattern change mode select between queue pattern to play after current, or force immediate switch
+done-add playlist mode on/off
+done  -add playlist length select
+3-play concurrent patterns
+1-load/save patterns
+2-pattern shift left/right
+2-cut/copy/paste patterns
+1-panic/all notes off
+done-add keys to mute/unmute channels
+1-reassign number keys to channel mutes.  use ~ and tab as modifiers for solo, etc. 
+
+SeeAlso:
+angriff, sseq, footils

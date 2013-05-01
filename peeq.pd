@@ -1,0 +1,527 @@
+#N canvas 206 7 789 490 12;
+#X obj -6 -62 cnv 15 674 350 empty empty peeq::pd.sequencer 2 6 0 16
+-1 -262144 0;
+#X obj -3 -44 cnv 15 669 329 empty empty empty 20 12 0 14 -166441 -66577
+0;
+#N canvas 518 276 491 360 guts 0;
+#N canvas 0 0 471 336 init 0;
+#X obj 26 32 loadbang;
+#X msg 89 73 120;
+#X obj 89 108 s bpm_init;
+#X msg 180 73 127;
+#X obj 180 108 s vol_init;
+#X obj 26 108 s mute;
+#X msg 26 73 0;
+#X obj 276 108 s plength_init;
+#X msg 27 153 0;
+#X obj 27 188 s row_sel;
+#X msg 276 73 1;
+#X obj 237 188 s chan_init;
+#X msg 237 154 10;
+#X obj 125 188 s note_init;
+#X obj 336 188 s curr_edit_patt;
+#X msg 336 153 0;
+#X msg 125 153 60;
+#X connect 0 0 1 0;
+#X connect 0 0 3 0;
+#X connect 0 0 6 0;
+#X connect 0 0 10 0;
+#X connect 0 0 8 0;
+#X connect 0 0 16 0;
+#X connect 0 0 12 0;
+#X connect 0 0 15 0;
+#X connect 1 0 2 0;
+#X connect 3 0 4 0;
+#X connect 6 0 5 0;
+#X connect 8 0 9 0;
+#X connect 10 0 7 0;
+#X connect 12 0 11 0;
+#X connect 15 0 14 0;
+#X connect 16 0 13 0;
+#X restore 172 56 pd init;
+#N canvas 332 66 546 396 keycommands 0;
+#X obj 26 18 key;
+#X obj 26 77 s run_r;
+#X obj 93 77 s inc_patt;
+#X obj 184 77 s dec_patt;
+#X obj 26 106 s clr_ticks;
+#X obj 210 105 s inc_row;
+#X obj 124 106 s dec_row;
+#N canvas 211 262 604 349 macro1 0;
+#X obj 92 1 inlet;
+#X obj 92 187 s key_ticks;
+#X obj 92 55 sel 49;
+#X text 112 32 put the number of the key you wish to assign here;
+#X text 109 88 put a comma separated list of the ticks you wish to
+assign to the macro;
+#X msg 92 126 1 \, 5 \, 9 \, 13;
+#X connect 0 0 2 0;
+#X connect 2 0 5 0;
+#X connect 5 0 1 0;
+#X restore 162 136 pd macro1;
+#N canvas 324 242 622 337 qwerty_decode 0;
+#X obj 11 71 select 113 97 119 115 101 100 114 102 116 103 121 104
+117 106 105 107;
+#X obj 11 37 inlet;
+#X obj 11 122 f 1;
+#X obj 42 122 f 2;
+#X obj 73 122 f 3;
+#X obj 104 122 f 4;
+#X obj 135 122 f 5;
+#X obj 166 122 f 6;
+#X obj 197 122 f 7;
+#X obj 228 122 f 8;
+#X obj 259 122 f 9;
+#X obj 289 122 f 10;
+#X obj 327 122 f 11;
+#X obj 365 122 f 12;
+#X obj 403 122 f 13;
+#X obj 441 122 f 14;
+#X obj 479 122 f 15;
+#X obj 517 122 f 16;
+#X obj 11 160 s key_ticks;
+#X connect 0 0 2 0;
+#X connect 0 1 3 0;
+#X connect 0 2 4 0;
+#X connect 0 3 5 0;
+#X connect 0 4 6 0;
+#X connect 0 5 7 0;
+#X connect 0 6 8 0;
+#X connect 0 7 9 0;
+#X connect 0 8 10 0;
+#X connect 0 9 11 0;
+#X connect 0 10 12 0;
+#X connect 0 11 13 0;
+#X connect 0 12 14 0;
+#X connect 0 13 15 0;
+#X connect 0 14 16 0;
+#X connect 0 15 17 0;
+#X connect 1 0 0 0;
+#X connect 2 0 18 0;
+#X connect 3 0 18 0;
+#X connect 4 0 18 0;
+#X connect 5 0 18 0;
+#X connect 6 0 18 0;
+#X connect 7 0 18 0;
+#X connect 8 0 18 0;
+#X connect 9 0 18 0;
+#X connect 10 0 18 0;
+#X connect 11 0 18 0;
+#X connect 12 0 18 0;
+#X connect 13 0 18 0;
+#X connect 14 0 18 0;
+#X connect 15 0 18 0;
+#X connect 16 0 18 0;
+#X connect 17 0 18 0;
+#X restore 25 136 pd qwerty_decode;
+#N canvas 211 262 608 353 macro2 0;
+#X obj 92 1 inlet;
+#X obj 92 187 s key_ticks;
+#X text 112 32 put the number of the key you wish to assign here;
+#X text 109 88 put a comma separated list of the ticks you wish to
+assign to the macro;
+#X msg 92 126 1 \, 3 \, 5 \, 7 \, 9 \, 11 \, 13 \, 15;
+#X obj 92 55 sel 50;
+#X connect 0 0 5 0;
+#X connect 4 0 1 0;
+#X connect 5 0 4 0;
+#X restore 244 136 pd macro2;
+#N canvas 211 262 608 353 macro3 0;
+#X obj 92 1 inlet;
+#X obj 92 187 s key_ticks;
+#X text 112 32 put the number of the key you wish to assign here;
+#X text 109 88 put a comma separated list of the ticks you wish to
+assign to the macro;
+#X msg 92 126 5 \, 13;
+#X obj 92 55 sel 51;
+#X connect 0 0 5 0;
+#X connect 4 0 1 0;
+#X connect 5 0 4 0;
+#X restore 26 167 pd macro3;
+#N canvas 211 262 608 353 macro4 0;
+#X obj 92 1 inlet;
+#X obj 92 187 s key_ticks;
+#X text 112 32 put the number of the key you wish to assign here;
+#X text 109 88 put a comma separated list of the ticks you wish to
+assign to the macro;
+#X msg 92 126 5 \, 13;
+#X obj 92 55 sel 51;
+#X connect 0 0 5 0;
+#X connect 4 0 1 0;
+#X connect 5 0 4 0;
+#X restore 107 167 pd macro4;
+#X obj 193 168 s key_ch;
+#X obj 267 168 s key_note;
+#X obj 26 48 sel 32 43 45 99 44 46 108;
+#X obj 26 197 s pl_on_in;
+#X connect 0 0 7 0;
+#X connect 0 0 8 0;
+#X connect 0 0 9 0;
+#X connect 0 0 10 0;
+#X connect 0 0 11 0;
+#X connect 0 0 12 0;
+#X connect 0 0 13 0;
+#X connect 0 0 14 0;
+#X connect 14 0 1 0;
+#X connect 14 1 2 0;
+#X connect 14 2 3 0;
+#X connect 14 3 4 0;
+#X connect 14 4 6 0;
+#X connect 14 5 5 0;
+#X connect 14 6 15 0;
+#X restore 172 88 pd keycommands;
+#N canvas 377 14 474 324 clock 0;
+#N canvas 472 34 522 372 16count 0;
+#X obj 88 61 inlet;
+#X obj 88 217 outlet;
+#X obj 127 123 + 1;
+#X obj 146 60 inlet;
+#X msg 146 84 0;
+#X obj 152 217 s bar;
+#X obj 88 123 f 0;
+#X obj 105 156 sel 15;
+#X obj 152 186 f 0;
+#X connect 0 0 6 0;
+#X connect 2 0 6 1;
+#X connect 3 0 4 0;
+#X connect 4 0 6 1;
+#X connect 6 0 2 0;
+#X connect 6 0 7 0;
+#X connect 6 0 1 0;
+#X connect 7 0 8 0;
+#X connect 8 0 5 0;
+#X connect 8 0 6 1;
+#X restore 69 171 pd 16count;
+#X obj 69 140 metro;
+#X obj 140 43 r bpm;
+#X obj 69 43 r run_s;
+#N canvas 0 0 462 312 bpm2ms 0;
+#X floatatom 127 76 5 0 0 0 - - -;
+#X obj 127 141 /;
+#X obj 127 43 inlet;
+#X obj 127 174 outlet;
+#X msg 127 108 15000;
+#X connect 0 0 1 1;
+#X connect 0 0 4 0;
+#X connect 1 0 3 0;
+#X connect 2 0 0 0;
+#X connect 4 0 1 0;
+#X restore 140 75 pd bpm2ms;
+#X obj 69 202 s clock;
+#X obj 144 140 spigot;
+#X obj 187 113 == 1;
+#X connect 0 0 5 0;
+#X connect 1 0 0 0;
+#X connect 2 0 4 0;
+#X connect 3 0 1 0;
+#X connect 3 0 6 0;
+#X connect 3 0 7 0;
+#X connect 4 0 1 1;
+#X connect 6 0 0 1;
+#X connect 7 0 6 1;
+#X restore 57 56 pd clock;
+#N canvas 44 232 730 413 pattlogic 0;
+#X obj 37 11 r pattern;
+#X obj 37 74 spigot;
+#X obj 37 108 s patt_sel;
+#X obj 80 41 r chase;
+#X obj 234 138 +;
+#X obj 234 111 f 1;
+#X obj 281 111 f -1;
+#X obj 281 137 +;
+#X obj 281 49 r dec_patt;
+#X obj 234 20 r inc_patt;
+#X obj 234 183 s patt_sel;
+#X obj 271 80 r curr_edit_patt;
+#X obj 37 252 spigot;
+#X obj 80 192 r chase;
+#X obj 37 292 s pattern;
+#X obj 37 165 r curr_edit_patt;
+#X obj 80 221 != 1;
+#X obj 454 36 r inc_row;
+#X obj 501 69 r dec_row;
+#X obj 454 165 +;
+#X obj 454 138 f 1;
+#X obj 501 138 f -1;
+#X obj 501 164 +;
+#X obj 491 101 r curr_row;
+#X obj 454 210 s row_sel;
+#X connect 0 0 1 0;
+#X connect 1 0 2 0;
+#X connect 3 0 1 1;
+#X connect 4 0 10 0;
+#X connect 5 0 4 0;
+#X connect 6 0 7 0;
+#X connect 7 0 10 0;
+#X connect 8 0 6 0;
+#X connect 9 0 5 0;
+#X connect 11 0 7 1;
+#X connect 11 0 4 1;
+#X connect 12 0 14 0;
+#X connect 13 0 16 0;
+#X connect 15 0 12 0;
+#X connect 16 0 12 1;
+#X connect 17 0 20 0;
+#X connect 18 0 21 0;
+#X connect 19 0 24 0;
+#X connect 20 0 19 0;
+#X connect 21 0 22 0;
+#X connect 22 0 24 0;
+#X connect 23 0 19 1;
+#X connect 23 0 22 1;
+#X restore 172 120 pd pattlogic;
+#N canvas 0 0 458 308 leds 0;
+#X obj 24 160 s led01;
+#X obj 85 160 s led02;
+#X obj 146 160 s led03;
+#X obj 207 160 s led04;
+#X obj 24 183 s led05;
+#X obj 85 183 s led06;
+#X obj 146 183 s led07;
+#X obj 207 183 s led08;
+#X obj 24 206 s led09;
+#X obj 85 206 s led10;
+#X obj 146 206 s led11;
+#X obj 207 206 s led12;
+#X obj 24 229 s led13;
+#X obj 85 229 s led14;
+#X obj 146 229 s led15;
+#X obj 207 229 s led16;
+#X obj 24 124 sel 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15;
+#X obj 101 68 ==;
+#X obj 24 92 spigot;
+#X obj 88 14 r pattern;
+#X msg 106 40 bang;
+#X text 148 39 <--this bang updates led status when either changes
+;
+#X obj 199 15 r curr_edit_patt;
+#X obj 24 14 r clock;
+#X connect 16 0 0 0;
+#X connect 16 1 1 0;
+#X connect 16 2 2 0;
+#X connect 16 3 3 0;
+#X connect 16 4 4 0;
+#X connect 16 5 5 0;
+#X connect 16 6 6 0;
+#X connect 16 7 7 0;
+#X connect 16 8 8 0;
+#X connect 16 9 9 0;
+#X connect 16 10 10 0;
+#X connect 16 11 11 0;
+#X connect 16 12 12 0;
+#X connect 16 13 13 0;
+#X connect 16 14 14 0;
+#X connect 16 15 15 0;
+#X connect 17 0 18 1;
+#X connect 18 0 16 0;
+#X connect 19 0 17 0;
+#X connect 20 0 17 0;
+#X connect 22 0 17 1;
+#X connect 22 0 20 0;
+#X connect 23 0 18 0;
+#X restore 57 86 pd leds;
+#N canvas 0 0 456 306 pl 0;
+#X obj -78 11 r bar;
+#X obj 90 87 spigot;
+#X obj 90 111 spigot;
+#X msg 13 37 bang;
+#X obj 147 87 == 0;
+#X obj 90 135 spigot;
+#X obj 90 159 spigot;
+#X obj 90 183 spigot;
+#X obj 90 207 spigot;
+#X obj 90 231 spigot;
+#X obj 147 159 == 3;
+#X obj 147 183 == 4;
+#X obj 147 207 == 5;
+#X obj 147 231 == 6;
+#X obj 90 255 spigot;
+#X obj 147 255 == 7;
+#X obj -78 70 f 0;
+#X obj -28 70 + 1;
+#X obj -78 94 mod 8;
+#X msg -78 35 bang;
+#X obj 147 135 == 2;
+#X obj 147 111 == 1;
+#X obj -78 223 s patt_in;
+#X obj 239 53 r patt_out;
+#X obj -13 98 r bars_out;
+#X obj 239 108 r plbar1_out;
+#X obj 239 84 s plbang;
+#X obj 239 132 r plbar2_out;
+#X obj 239 156 r plbar3_out;
+#X obj 239 180 r plbar4_out;
+#X obj 239 204 r plbar5_out;
+#X obj 239 228 r plbar6_out;
+#X obj 239 252 r plbar7_out;
+#X obj 239 276 r plbar8_out;
+#X obj 432 65 r pl_on_out;
+#X obj -78 181 spigot;
+#X obj 242 352 s pattern;
+#X obj 242 322 spigot;
+#X obj 432 104 s chase_in;
+#X connect 0 0 19 0;
+#X connect 0 0 3 0;
+#X connect 1 0 37 0;
+#X connect 2 0 37 0;
+#X connect 3 0 26 0;
+#X connect 4 0 1 1;
+#X connect 5 0 37 0;
+#X connect 6 0 37 0;
+#X connect 7 0 37 0;
+#X connect 8 0 37 0;
+#X connect 9 0 37 0;
+#X connect 10 0 6 1;
+#X connect 11 0 7 1;
+#X connect 12 0 8 1;
+#X connect 13 0 9 1;
+#X connect 14 0 37 0;
+#X connect 15 0 14 1;
+#X connect 16 0 18 0;
+#X connect 17 0 16 1;
+#X connect 18 0 35 0;
+#X connect 19 0 16 0;
+#X connect 20 0 5 1;
+#X connect 21 0 2 1;
+#X connect 23 0 4 0;
+#X connect 23 0 21 0;
+#X connect 23 0 20 0;
+#X connect 23 0 10 0;
+#X connect 23 0 11 0;
+#X connect 23 0 12 0;
+#X connect 23 0 13 0;
+#X connect 23 0 15 0;
+#X connect 23 0 17 0;
+#X connect 24 0 18 1;
+#X connect 25 0 1 0;
+#X connect 27 0 2 0;
+#X connect 28 0 5 0;
+#X connect 29 0 6 0;
+#X connect 30 0 7 0;
+#X connect 31 0 8 0;
+#X connect 32 0 9 0;
+#X connect 33 0 14 0;
+#X connect 34 0 35 1;
+#X connect 34 0 37 1;
+#X connect 34 0 38 0;
+#X connect 35 0 22 0;
+#X connect 37 0 36 0;
+#X restore 57 118 pd pl;
+#X restore 64 255 pd guts;
+#X obj 475 -37 cnv 15 189 60 empty empty playlist 2 8 0 12 -1 -262144
+0;
+#X obj 628 -22 cnv 15 34 43 empty empty bars 2 11 0 10 -233017 -1 0
+;
+#X obj 477 -22 cnv 15 148 43 empty empty empty 20 12 0 14 -233017 -66577
+0;
+#X obj 479 1 hradio 18 1 0 8 patt_out patt_in empty 0 -6 192 8 -228709
+-1 -1 0;
+#X floatatom 479 -20 2 0 7 0 - plbang plbar1_out;
+#X floatatom 497 -20 2 0 7 0 - plbang plbar2_out;
+#X floatatom 515 -20 2 0 7 0 - plbang plbar3_out;
+#X floatatom 533 -20 2 0 7 0 - plbang plbar4_out;
+#X floatatom 551 -20 2 0 7 0 - plbang plbar5_out;
+#X floatatom 569 -20 2 0 7 0 - plbang plbar6_out;
+#X floatatom 587 -20 2 0 7 0 - plbang plbar7_out;
+#X floatatom 605 -20 2 0 7 0 - plbang plbar8_out;
+#X obj 630 1 nbx 2 18 1 8 0 0 bars_out plength_init empty 0 -6 192
+10 -228709 -1 -1 1 256;
+#X obj -1 -37 cnv 15 473 60 empty empty transport 2 8 0 12 -1 -262144
+0;
+#X obj 1 -22 cnv 15 469 43 empty empty empty 20 12 0 14 -233017 -66577
+0;
+#X obj 3 -12 tgl 31 0 run_s run_r run 0 -6 192 10 -24198 -1 -1 0 1
+;
+#X obj 37 -12 nbx 3 31 0 500 0 0 bpm bpm_init bpm 0 -6 192 10 -241291
+-1 -1 120 256;
+#X obj 84 -12 hradio 31 1 0 8 curr_edit_patt patt_sel pattern 0 -6
+192 10 -228709 -1 -1 0;
+#X obj 369 -12 bng 31 250 50 0 inc_patt inc_patt > 9 15 192 20 -260818
+-1 -1;
+#X obj 335 -12 bng 31 250 50 0 dec_patt dec_patt < 9 15 192 20 -260818
+-1 -1;
+#X obj 437 -12 tgl 31 0 chase chase_in chase -1 -6 192 9 -228709 -1
+-1 0 1;
+#X obj 403 -12 bng 31 250 50 0 clr_ticks clr_ticks x 8 14 192 20 -260818
+-1 -1;
+#X obj -1 26 cnv 15 665 217 empty empty editor 2 8 0 12 -1 -262144
+0;
+#X obj 1 40 cnv 15 661 201 empty empty empty 20 12 0 14 -233017 -66577
+0;
+#X obj 99 43 bng 17 100 50 0 empty led01 empty 0 -6 64 8 -241291 -258699
+-1;
+#X obj 120 43 bng 17 100 50 0 empty led02 empty 0 -6 64 8 -241291 -260818
+-1;
+#X obj 139 43 bng 17 100 50 0 empty led03 empty 0 -6 64 8 -241291 -260818
+-1;
+#X obj 159 43 bng 17 100 50 0 empty led04 empty 0 -6 64 8 -241291 -260818
+-1;
+#X obj 180 43 bng 17 100 50 0 empty led05 empty 0 -6 64 8 -241291 -258699
+-1;
+#X obj 199 43 bng 17 100 50 0 empty led06 empty 0 -6 64 8 -241291 -260818
+-1;
+#X obj 220 43 bng 17 100 50 0 empty led07 empty 0 -6 64 8 -241291 -260818
+-1;
+#X obj 240 43 bng 17 100 50 0 empty led08 empty 0 -6 64 8 -241291 -260818
+-1;
+#X obj 261 43 bng 17 100 50 0 empty led09 empty 0 -6 64 8 -241291 -258699
+-1;
+#X obj 280 43 bng 17 100 50 0 empty led10 empty 0 -6 64 8 -241291 -260818
+-1;
+#X obj 299 43 bng 17 100 50 0 empty led11 empty 0 -6 64 8 -241291 -260818
+-1;
+#X obj 319 43 bng 17 100 50 0 empty led12 empty 0 -6 64 8 -241291 -260818
+-1;
+#X obj 339 43 bng 17 100 50 0 empty led13 empty 0 -6 64 8 -241291 -258699
+-1;
+#X obj 359 43 bng 17 100 50 0 empty led14 empty 0 -6 64 8 -241291 -260818
+-1;
+#X obj 379 43 bng 17 100 50 0 empty led15 empty 0 -6 64 8 -241291 -260818
+-1;
+#X obj 399 43 bng 17 100 50 0 empty led16 empty 0 -6 64 8 -241291 -260818
+-1;
+#X obj 97 63 cnv 15 563 175 empty empty empty 20 12 0 14 -128992 -66577
+0;
+#X obj 3 63 vradio 22 1 0 8 curr_row row_sel empty 0 -6 192 8 -228709
+-1 -1 1;
+#X obj 442 66 cnv 15 216 170 empty empty empty 20 12 0 14 -195568 -66577
+0;
+#N canvas 99 269 650 416 help 0;
+#X text 35 185 space bar - starts/stops sequencer;
+#X text 35 214 +/- - increment/decrement pattern;
+#X text 35 -17 help:;
+#X text 38 586 contact:djn125@yahoo.com;
+#X text 38 615 copyright:tekrosys.2003;
+#X text 35 12 peeq is a simple pattern sequencer for the pd environment.
+it started out as a simple grid to bang out midi data \, but has evolved
+to support multiple patterns and a small playlist. i wanted an extremely
+fast way to output midi data in a live situation \, so flipping between
+patterns and entering row data can be done very quickly using the keyboard.
+the design is now modular \, so rows may be added by simply creating
+instances of the row objects. The number of patterns may be increased
+by changing the limits of the arrays used to store them.;
+#X text 37 512 1-4 - number keys assignable to pattern macros. actually
+any key may be assigned and any number of macros can be defined. look
+in the 'keycommands' subpatch under 'guts'.;
+#X text 37 467 chase - enabling this forces the pattern editor to follow
+the playlist.;
+#X text 35 301 [/] - increment/decrement channel number of selected
+row;
+#X text 35 272 </> - increment/decrement row selection;
+#X text 35 243 c - clears current pattern;
+#X text 37 422 qwertyui and asdfghjk - these keys activate the steps
+of the currently selected row;
+#X text 35 330 \; /' - increment/decrement note number of selected
+row;
+#X text 42 366 l - toggles playlist mode on or off;
+#X restore 1 255 pd help;
+#X obj 25 63 row 1;
+#X obj 653 -35 tgl 10 0 pl_on_out pl_on_in on -16 4 192 8 -241291 -258699
+-262144 0 1;
+#X obj 25 85 row 2;
+#X obj 25 107 row 3;
+#X obj 25 129 row 4;
+#X obj 25 151 row 5;
+#X obj 25 195 row 7;
+#X obj 25 217 row 8;
+#X obj 25 173 row 6;
