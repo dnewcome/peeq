@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>peeq :: pd.sequencer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:           #080810;
+  --surface:      #0f0f1c;
+  --panel:        #131320;
+  --panel-border: #22223a;
+  --inset:        #0a0a16;
+  --text:         #7070a0;
+  --text-bright:  #b0b0d8;
+  --text-dim:     #3a3a60;
+  --amber:        #e89000;
+  --amber-bright: #ffaa10;
+  --amber-dim:    #3a2800;
+  --red:          #e03030;
+  --red-dim:      #280a0a;
+  --green:        #20b840;
+  --green-dim:    #082010;
+  --blue:         #3060e0;
+  --blue-dim:     #0a1040;
+  --teal:         #10b8a0;
+  --step-off:     #16162a;
+  --step-border:  #1e1e36;
+  --beat-bg:      #131328;   /* every 4th step */
+  --focus-col:    #1c1c38;   /* current play column (off) */
+  --focus-on:     #b86000;   /* current play column (on) */
+  --row-focus:    #1a1a30;   /* selected row bg */
+  --row-normal:   #131320;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  min-height: 100vh;
+  padding: 12px;
+  user-select: none;
+}
+
+#app {
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Title bar ──────────────────────────────────────────────────────────────── */
+
+.titlebar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 4px 2px;
+  border-bottom: 1px solid var(--panel-border);
+  margin-bottom: 2px;
+}
+
+.title {
+  font-family: 'VT323', monospace;
+  font-size: 28px;
+  color: var(--text-bright);
+  letter-spacing: 1px;
+}
+
+.midi-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.midi-row label {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+select#midi-output {
+  background: var(--inset);
+  color: var(--text-bright);
+  border: 1px solid var(--panel-border);
+  font-family: inherit;
+  font-size: 11px;
+  padding: 2px 6px;
+  outline: none;
+  cursor: pointer;
+}
+
+select#midi-output:focus { border-color: var(--amber); }
+
+/* ── Panel shell ────────────────────────────────────────────────────────────── */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  padding: 6px 8px 8px;
+  position: relative;
+}
+
+.panel-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+/* ── Top row ────────────────────────────────────────────────────────────────── */
+
+.top-row {
+  display: flex;
+  gap: 6px;
+}
+
+#transport-panel { flex: 1; }
+#playlist-panel  { flex: 0 0 auto; width: 300px; }
+
+/* ── Transport ──────────────────────────────────────────────────────────────── */
+
+.transport-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+/* Run button */
+#run-btn {
+  width: 42px;
+  height: 32px;
+  background: var(--green-dim);
+  border: 1px solid #1a4028;
+  color: #205030;
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 80ms, color 80ms, border-color 80ms;
+}
+#run-btn.active {
+  background: var(--green);
+  border-color: #50e870;
+  color: #000;
+  box-shadow: 0 0 10px #20b84088;
+}
+#run-btn:hover { border-color: var(--green); color: var(--green); }
+
+/* BPM */
+.bpm-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.bpm-group input {
+  width: 52px;
+  height: 32px;
+  background: var(--inset);
+  border: 1px solid var(--panel-border);
+  color: var(--amber-bright);
+  font-family: inherit;
+  font-size: 16px;
+  text-align: right;
+  padding: 0 4px;
+  outline: none;
+}
+.bpm-group input:focus { border-color: var(--amber); }
+.bpm-group .unit { color: var(--text-dim); font-size: 11px; }
+
+/* Pattern bank */
+.sublabel {
+  color: var(--text-dim);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+#pattern-bank {
+  display: flex;
+  gap: 3px;
+}
+
+.patt-btn {
+  width: 28px;
+  height: 32px;
+  background: var(--inset);
+  border: 1px solid var(--step-border);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: border-color 80ms;
+}
+.patt-btn:hover { border-color: var(--text); color: var(--text); }
+
+.patt-btn.editing {
+  background: var(--amber-dim);
+  border-color: var(--amber);
+  color: var(--amber-bright);
+}
+.patt-btn .play-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: transparent;
+  flex-shrink: 0;
+}
+.patt-btn.playing .play-dot { background: var(--red); box-shadow: 0 0 4px var(--red); }
+
+/* Arrow + clear buttons */
+.arrow-btn, .clear-btn {
+  width: 28px;
+  height: 32px;
+  background: var(--inset);
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 80ms, color 80ms;
+}
+.arrow-btn:hover { border-color: var(--amber); color: var(--amber); }
+.clear-btn:hover { border-color: var(--red); color: var(--red); }
+
+/* Chase */
+.chase-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.chase-label input[type=checkbox] { accent-color: var(--amber); cursor: pointer; }
+.chase-label.active { color: var(--amber); }
+
+/* ── Playlist ────────────────────────────────────────────────────────────────── */
+
+.playlist-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#pl-bars {
+  display: flex;
+  gap: 3px;
+}
+
+.pl-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.pl-bar-idx {
+  font-size: 9px;
+  color: var(--text-dim);
+}
+.pl-bar input {
+  width: 24px;
+  height: 26px;
+  background: var(--inset);
+  border: 1px solid var(--step-border);
+  color: var(--text-bright);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: center;
+  padding: 0;
+  outline: none;
+}
+.pl-bar input:focus { border-color: var(--amber); }
+.pl-bar.active input { border-color: var(--red); color: var(--red); }
+
+.pl-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  padding-left: 8px;
+  border-left: 1px solid var(--panel-border);
+}
+
+.pl-right input[type=number] {
+  width: 30px;
+  height: 26px;
+  background: var(--inset);
+  border: 1px solid var(--step-border);
+  color: var(--text-bright);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: center;
+  padding: 0;
+  outline: none;
+}
+.pl-right input[type=number]:focus { border-color: var(--amber); }
+
+.pl-on-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pl-on-label input[type=checkbox] { accent-color: var(--red); cursor: pointer; }
+.pl-on-label.active { color: var(--red); }
+
+/* ── Editor ──────────────────────────────────────────────────────────────────── */
+
+#editor-panel { }
+
+.editor-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* LED row */
+.led-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--panel-border);
+  margin-bottom: 2px;
+}
+
+.row-spacer {
+  width: 58px;   /* matches row label width */
+  flex-shrink: 0;
+}
+
+.leds-inner {
+  display: flex;
+  gap: 2px;
+}
+
+.led {
+  width: 28px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--inset);
+  border: 1px solid var(--step-border);
+  transition: background 40ms;
+}
+.led.group-start { margin-left: 5px; }
+.led.active {
+  background: var(--red);
+  border-color: #ff5050;
+  box-shadow: 0 0 8px var(--red);
+}
+
+/* Seq rows */
+#seq-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.seq-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--row-normal);
+  padding: 3px 4px;
+  transition: background 80ms;
+}
+.seq-row.focused { background: var(--row-focus); }
+
+.row-focus-indicator {
+  width: 6px;
+  height: 22px;
+  background: transparent;
+  border-radius: 2px;
+  flex-shrink: 0;
+  transition: background 80ms;
+}
+.seq-row.focused .row-focus-indicator { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+
+.row-label {
+  width: 46px;
+  color: var(--text-dim);
+  font-size: 12px;
+  flex-shrink: 0;
+  text-align: right;
+}
+.seq-row.focused .row-label { color: var(--text-bright); }
+
+/* Step grid */
+.step-grid {
+  display: flex;
+  gap: 2px;
+}
+
+.step-btn {
+  width: 28px;
+  height: 24px;
+  background: var(--step-off);
+  border: 1px solid var(--step-border);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 60ms, border-color 60ms, box-shadow 60ms;
+  flex-shrink: 0;
+}
+.step-btn.beat-start { margin-left: 5px; }
+
+/* Step states */
+.step-btn.on {
+  background: var(--amber);
+  border-color: var(--amber-bright);
+  box-shadow: 0 0 6px #e8900066;
+}
+.step-btn.playing {
+  border-color: #5050a0;
+  background: var(--focus-col);
+}
+.step-btn.on.playing {
+  background: var(--focus-on);
+  border-color: #ff8020;
+  box-shadow: 0 0 10px #c0600088;
+}
+
+/* Row params */
+.row-params {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.param-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.param-label {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+.param-input {
+  width: 36px;
+  height: 22px;
+  background: var(--inset);
+  border: 1px solid var(--step-border);
+  color: var(--text-bright);
+  font-family: inherit;
+  font-size: 12px;
+  text-align: right;
+  padding: 0 3px;
+  outline: none;
+}
+.param-input:focus { border-color: var(--amber); }
+.param-input.wide { width: 42px; }
+
+.mute-btn {
+  width: 22px;
+  height: 22px;
+  background: var(--red-dim);
+  border: 1px solid #3a1010;
+  color: #602020;
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+  margin-left: 4px;
+  letter-spacing: 0;
+  transition: background 80ms, color 80ms, border-color 80ms;
+}
+.mute-btn.muted {
+  background: var(--red);
+  border-color: #ff5050;
+  color: #000;
+  box-shadow: 0 0 6px var(--red);
+}
+
+/* ── Key reference ───────────────────────────────────────────────────────────── */
+
+.keyref {
+  margin-top: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2px 20px;
+}
+
+.keyref-title {
+  grid-column: 1/-1;
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 4px;
+}
+
+.key-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.7;
+}
+.key-entry kbd {
+  display: inline-block;
+  background: var(--inset);
+  border: 1px solid var(--panel-border);
+  color: var(--text-bright);
+  font-family: inherit;
+  font-size: 11px;
+  padding: 0 4px;
+  min-width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.key-entry span { color: var(--text-dim); }
+
+/* ── Utility ─────────────────────────────────────────────────────────────────── */
+
+input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.no-midi-msg {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Title bar -->
+  <div class="titlebar">
+    <span class="title">peeq :: pd.sequencer</span>
+    <div class="midi-row">
+      <label for="midi-output">midi out</label>
+      <select id="midi-output"><option value="">— no output —</option></select>
+    </div>
+  </div>
+
+  <!-- Top row: transport + playlist -->
+  <div class="top-row">
+
+    <div class="panel" id="transport-panel">
+      <div class="panel-label">transport</div>
+      <div class="transport-inner">
+        <button id="run-btn">run</button>
+
+        <div class="bpm-group">
+          <input type="number" id="bpm-input" value="120" min="20" max="999">
+          <span class="unit">bpm</span>
+        </div>
+
+        <span class="sublabel">pattern</span>
+        <div id="pattern-bank"></div>
+
+        <button id="dec-patt" class="arrow-btn">&lt;</button>
+        <button id="inc-patt" class="arrow-btn">&gt;</button>
+        <button id="clear-btn" class="clear-btn">x</button>
+
+        <label class="chase-label" id="chase-label">
+          <input type="checkbox" id="chase-cb"> chase
+        </label>
+      </div>
+    </div>
+
+    <div class="panel" id="playlist-panel">
+      <div class="panel-label">playlist</div>
+      <div class="playlist-inner">
+        <div id="pl-bars"></div>
+        <div class="pl-right">
+          <span class="sublabel">bars</span>
+          <input type="number" id="pl-length" value="1" min="1" max="8">
+          <label class="pl-on-label" id="pl-on-label">
+            <input type="checkbox" id="pl-on-cb"> on
+          </label>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .top-row -->
+
+  <!-- Editor -->
+  <div class="panel" id="editor-panel">
+    <div class="panel-label">editor</div>
+    <div class="editor-inner">
+      <div class="led-row">
+        <div class="row-spacer"></div>
+        <div class="leds-inner" id="leds"></div>
+      </div>
+      <div id="seq-rows"></div>
+    </div>
+  </div>
+
+  <!-- Key reference -->
+  <div class="keyref">
+    <div class="keyref-title">keyboard reference</div>
+    <div class="key-entry"><kbd>spc</kbd><span>start / stop (resets position)</span></div>
+    <div class="key-entry"><kbd>+</kbd><span>next pattern (legato)</span></div>
+    <div class="key-entry"><kbd>-</kbd><span>prev pattern (legato)</span></div>
+    <div class="key-entry"><kbd>.</kbd><span>move row focus down</span></div>
+    <div class="key-entry"><kbd>,</kbd><span>move row focus up</span></div>
+    <div class="key-entry"><kbd>c</kbd><span>clear current pattern</span></div>
+    <div class="key-entry"><kbd>l</kbd><span>toggle playlist</span></div>
+    <div class="key-entry"><kbd>]</kbd><span>inc channel of focused row</span></div>
+    <div class="key-entry"><kbd>[</kbd><span>dec channel of focused row</span></div>
+    <div class="key-entry"><kbd>'</kbd><span>inc note of focused row</span></div>
+    <div class="key-entry"><kbd>;</kbd><span>dec note of focused row</span></div>
+    <div class="key-entry"><kbd>1</kbd><span>macro: quarter notes</span></div>
+    <div class="key-entry"><kbd>2</kbd><span>macro: eighth notes</span></div>
+    <div class="key-entry"><kbd>3</kbd><span>macro: 2 &amp; 4</span></div>
+    <div class="key-entry"><kbd>4</kbd><span>macro: user (edit in JS)</span></div>
+    <div class="key-entry" style="grid-column:1/-1">
+      <kbd>q</kbd><kbd>a</kbd><kbd>w</kbd><kbd>s</kbd><kbd>e</kbd><kbd>d</kbd><kbd>r</kbd><kbd>f</kbd>
+      <kbd>t</kbd><kbd>g</kbd><kbd>y</kbd><kbd>h</kbd><kbd>u</kbd><kbd>j</kbd><kbd>i</kbd><kbd>k</kbd>
+      <span>toggle steps 1–16 of focused row (column pairs: Q+A=1&2, W+S=3&4 …)</span>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<script>
+'use strict';
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const NUM_PATTERNS = 8;
+const NUM_ROWS     = 8;
+const NUM_STEPS    = 16;
+const NOTE_DUR_MS  = 250;
+const LOOKAHEAD_S  = 0.1;   // schedule this far ahead
+const SCHED_MS     = 25;    // scheduler interval
+
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+// patterns[patIdx][rowIdx][stepIdx] = 0|1
+const patterns = Array.from({length: NUM_PATTERNS}, () =>
+  Array.from({length: NUM_ROWS}, () => new Uint8Array(NUM_STEPS))
+);
+
+// Per-row settings
+const rows = Array.from({length: NUM_ROWS}, (_, i) => ({
+  channel: 10,
+  note:    60,
+  vol:     127,
+  muted:   false,
+}));
+
+// ─── State ───────────────────────────────────────────────────────────────────
+
+const S = {
+  running:      false,
+  bpm:          120,
+  playStep:     0,   // current visual step (updated from queue)
+  playPattern:  0,   // pattern currently sounding
+  editPattern:  0,   // pattern currently displayed in editor
+  chase:        false,
+  selectedRow:  0,
+  playlistOn:   false,
+  playlistBars: new Array(NUM_PATTERNS).fill(0),
+  playlistLen:  1,
+  playlistPos:  0,
+};
+
+// ─── Audio/clock ─────────────────────────────────────────────────────────────
+
+let audioCtx      = null;
+let schedTimer    = null;
+let nextNoteTime  = 0;
+let nextStep      = 0;
+const stepQueue   = [];   // {step, time} for visual sync
+
+function stepInterval() { return 15 / S.bpm; }   // seconds per 16th note
+
+function scheduleStep(step, time) {
+  // Fire MIDI notes for all unmuted rows
+  rows.forEach((row, ri) => {
+    if (row.muted) return;
+    if (patterns[S.playPattern][ri][step]) {
+      sendNote(row.channel, row.note, row.vol, time);
+    }
+  });
+  stepQueue.push({step, time});
+}
+
+function advanceStep() {
+  nextNoteTime += stepInterval();
+  nextStep = (nextStep + 1) % NUM_STEPS;
+  if (nextStep === 0) onBarEnd();
+}
+
+function onBarEnd() {
+  if (!S.playlistOn) return;
+  S.playlistPos = (S.playlistPos + 1) % S.playlistLen;
+  const newPatt = S.playlistBars[S.playlistPos];
+  if (newPatt !== S.playPattern) {
+    S.playPattern = newPatt;
+    updatePatternBank();
+    if (S.chase) {
+      S.editPattern = newPatt;
+      refreshStepGrid();
+    }
+  }
+  updatePlaylistActiveBar();
+}
+
+function scheduler() {
+  const now = audioCtx.currentTime;
+  while (nextNoteTime < now + LOOKAHEAD_S) {
+    scheduleStep(nextStep, nextNoteTime);
+    advanceStep();
+  }
+  schedTimer = setTimeout(scheduler, SCHED_MS);
+}
+
+function startSeq() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  S.running    = true;
+  nextStep     = 0;
+  nextNoteTime = audioCtx.currentTime + 0.05;
+  S.playlistPos = 0;
+  stepQueue.length = 0;
+  scheduler();
+  dom.runBtn.classList.add('active');
+  dom.runBtn.textContent = 'run';
+}
+
+function stopSeq() {
+  S.running = false;
+  if (schedTimer) clearTimeout(schedTimer);
+  schedTimer = null;
+  stepQueue.length = 0;
+  dom.runBtn.classList.remove('active');
+  updateLEDs(-1);
+}
+
+function toggleRun() {
+  if (S.running) stopSeq();
+  else startSeq();
+}
+
+// ─── Pattern management ───────────────────────────────────────────────────────
+
+function setEditPattern(idx) {
+  S.editPattern = ((idx % NUM_PATTERNS) + NUM_PATTERNS) % NUM_PATTERNS;
+  if (!S.chase) {
+    S.playPattern = S.editPattern;
+  }
+  updatePatternBank();
+  refreshStepGrid();
+}
+
+function incPattern() { setEditPattern(S.editPattern + 1); }
+function decPattern() { setEditPattern(S.editPattern - 1); }
+
+function clearPattern() {
+  patterns[S.editPattern].forEach(row => row.fill(0));
+  refreshStepGrid();
+}
+
+function toggleStep(rowIdx, stepIdx) {
+  const p = patterns[S.editPattern][rowIdx];
+  p[stepIdx] ^= 1;
+  updateStepBtn(rowIdx, stepIdx);
+}
+
+// ─── Row selection ────────────────────────────────────────────────────────────
+
+function setSelectedRow(idx) {
+  const prev = S.selectedRow;
+  S.selectedRow = ((idx % NUM_ROWS) + NUM_ROWS) % NUM_ROWS;
+  updateRowFocus(prev);
+  updateRowFocus(S.selectedRow);
+}
+
+function incRow() { setSelectedRow(S.selectedRow + 1); }
+function decRow() { setSelectedRow(S.selectedRow - 1); }
+
+// ─── Row param adjustments ────────────────────────────────────────────────────
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function incChannel() {
+  rows[S.selectedRow].channel = clamp(rows[S.selectedRow].channel + 1, 1, 16);
+  updateRowParamInputs(S.selectedRow);
+}
+function decChannel() {
+  rows[S.selectedRow].channel = clamp(rows[S.selectedRow].channel - 1, 1, 16);
+  updateRowParamInputs(S.selectedRow);
+}
+function incNote() {
+  rows[S.selectedRow].note = clamp(rows[S.selectedRow].note + 1, 0, 127);
+  updateRowParamInputs(S.selectedRow);
+}
+function decNote() {
+  rows[S.selectedRow].note = clamp(rows[S.selectedRow].note - 1, 0, 127);
+  updateRowParamInputs(S.selectedRow);
+}
+
+function toggleMute(rowIdx) {
+  rows[rowIdx].muted = !rows[rowIdx].muted;
+  updateMuteBtn(rowIdx);
+}
+
+function togglePlaylist() {
+  S.playlistOn = !S.playlistOn;
+  dom.plOnCb.checked = S.playlistOn;
+  dom.plOnLabel.classList.toggle('active', S.playlistOn);
+}
+
+// ─── Step macros ──────────────────────────────────────────────────────────────
+
+const MACROS = {
+  '1': [0, 4, 8, 12],                              // quarter notes
+  '2': [0, 2, 4, 6, 8, 10, 12, 14],               // eighth notes
+  '3': [4, 12],                                    // 2 & 4
+  '4': [4, 12],                                    // user-configurable copy of 3
+};
+
+function applyMacro(key) {
+  const steps = MACROS[key];
+  if (!steps) return;
+  const row = patterns[S.editPattern][S.selectedRow];
+  steps.forEach(s => { row[s] = 1; });
+  updateRowStepBtns(S.selectedRow);
+}
+
+// ─── Key mapping ──────────────────────────────────────────────────────────────
+
+// Each column-pair (q+a, w+s, ...) maps to two consecutive steps.
+// q→0, a→1, w→2, s→3, e→4, d→5, r→6, f→7, t→8, g→9, y→10, h→11, u→12, j→13, i→14, k→15
+const STEP_KEYS = {
+  q:0, a:1, w:2, s:3, e:4, d:5, r:6, f:7,
+  t:8, g:9, y:10, h:11, u:12, j:13, i:14, k:15,
+};
+
+function handleKeydown(e) {
+  // Don't capture when typing in inputs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+  const key = e.key;
+
+  switch (key) {
+    case ' ':       e.preventDefault(); toggleRun();    return;
+    case '+': case '=': incPattern();                   return;
+    case '-':       decPattern();                       return;
+    case 'c': case 'C': clearPattern();                 return;
+    case '.':       incRow();                           return;
+    case ',':       decRow();                           return;
+    case 'l': case 'L': togglePlaylist();               return;
+    case ']':       incChannel();                       return;
+    case '[':       decChannel();                       return;
+    case "'":       incNote();                          return;
+    case ';':       decNote();                          return;
+  }
+
+  // Step keys
+  const lk = key.toLowerCase();
+  if (lk in STEP_KEYS) {
+    e.preventDefault();
+    toggleStep(S.selectedRow, STEP_KEYS[lk]);
+    return;
+  }
+
+  // Macros
+  if (key in MACROS) {
+    applyMacro(key);
+  }
+}
+
+// ─── MIDI ─────────────────────────────────────────────────────────────────────
+
+let midiAccess = null;
+let midiOut    = null;
+
+async function initMidi() {
+  if (!navigator.requestMIDIAccess) {
+    dom.midiSelect.parentElement.innerHTML =
+      '<span class="no-midi-msg">Web MIDI not available (use Chrome/Edge)</span>';
+    return;
+  }
+  try {
+    midiAccess = await navigator.requestMIDIAccess();
+    populateMidiOutputs();
+    midiAccess.onstatechange = populateMidiOutputs;
+  } catch (err) {
+    console.warn('MIDI access denied:', err);
+  }
+}
+
+function populateMidiOutputs() {
+  const prev = dom.midiSelect.value;
+  dom.midiSelect.innerHTML = '<option value="">— no output —</option>';
+  midiAccess.outputs.forEach(out => {
+    const opt = document.createElement('option');
+    opt.value = out.id;
+    opt.textContent = out.name;
+    if (out.id === prev) opt.selected = true;
+    dom.midiSelect.appendChild(opt);
+  });
+  midiOut = midiAccess.outputs.get(dom.midiSelect.value) || null;
+}
+
+function sendNote(channel, note, velocity, scheduledTime) {
+  if (!midiOut || !audioCtx) return;
+  const ch = channel - 1;
+  const delayMs = Math.max(0, (scheduledTime - audioCtx.currentTime) * 1000);
+  setTimeout(() => {
+    if (!midiOut) return;
+    try {
+      midiOut.send([0x90 | ch, note, velocity]);
+      setTimeout(() => { if (midiOut) midiOut.send([0x80 | ch, note, 0]); }, NOTE_DUR_MS);
+    } catch (_) {}
+  }, delayMs);
+}
+
+// ─── DOM references ───────────────────────────────────────────────────────────
+
+const dom = {};
+
+// ─── Build UI ─────────────────────────────────────────────────────────────────
+
+function buildUI() {
+  dom.runBtn     = document.getElementById('run-btn');
+  dom.bpmInput   = document.getElementById('bpm-input');
+  dom.pattBank   = document.getElementById('pattern-bank');
+  dom.decPatt    = document.getElementById('dec-patt');
+  dom.incPatt    = document.getElementById('inc-patt');
+  dom.clearBtn   = document.getElementById('clear-btn');
+  dom.chaseCb    = document.getElementById('chase-cb');
+  dom.chaseLabel = document.getElementById('chase-label');
+  dom.plBars     = document.getElementById('pl-bars');
+  dom.plLength   = document.getElementById('pl-length');
+  dom.plOnCb     = document.getElementById('pl-on-cb');
+  dom.plOnLabel  = document.getElementById('pl-on-label');
+  dom.ledsEl     = document.getElementById('leds');
+  dom.seqRows    = document.getElementById('seq-rows');
+  dom.midiSelect = document.getElementById('midi-output');
+
+  buildPatternBank();
+  buildPlaylistBars();
+  buildLEDs();
+  buildSeqRows();
+  bindUIEvents();
+}
+
+// Pattern bank: 8 numbered buttons
+function buildPatternBank() {
+  dom.pattBtns = [];
+  for (let i = 0; i < NUM_PATTERNS; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'patt-btn';
+    btn.dataset.idx = i;
+
+    const num = document.createElement('span');
+    num.textContent = i;
+    const dot = document.createElement('div');
+    dot.className = 'play-dot';
+
+    btn.appendChild(num);
+    btn.appendChild(dot);
+    btn.addEventListener('click', () => setEditPattern(i));
+
+    dom.pattBtns.push(btn);
+    dom.pattBank.appendChild(btn);
+  }
+  updatePatternBank();
+}
+
+// Playlist bars: 8 number inputs (0-7)
+function buildPlaylistBars() {
+  dom.plBarEls = [];
+  for (let i = 0; i < NUM_PATTERNS; i++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'pl-bar';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'pl-bar-idx';
+    lbl.textContent = i + 1;
+
+    const inp = document.createElement('input');
+    inp.type  = 'number';
+    inp.min   = 0;
+    inp.max   = NUM_PATTERNS - 1;
+    inp.value = 0;
+    inp.addEventListener('change', () => {
+      S.playlistBars[i] = clamp(parseInt(inp.value) || 0, 0, NUM_PATTERNS - 1);
+      inp.value = S.playlistBars[i];
+    });
+
+    wrap.appendChild(lbl);
+    wrap.appendChild(inp);
+    dom.plBarEls.push(wrap);
+    dom.plBars.appendChild(wrap);
+  }
+}
+
+// LED strip
+function buildLEDs() {
+  dom.ledEls = [];
+  for (let i = 0; i < NUM_STEPS; i++) {
+    const led = document.createElement('div');
+    led.className = 'led' + (i % 4 === 0 && i > 0 ? ' group-start' : '');
+    dom.ledEls.push(led);
+    dom.ledsEl.appendChild(led);
+  }
+}
+
+// Seq rows (8 rows of step buttons + params)
+function buildSeqRows() {
+  dom.stepBtns  = [];  // [rowIdx][stepIdx]
+  dom.rowEls    = [];
+  dom.muteEls   = [];
+  dom.chanEls   = [];
+  dom.noteEls   = [];
+  dom.volEls    = [];
+
+  for (let ri = 0; ri < NUM_ROWS; ri++) {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'seq-row' + (ri === 0 ? ' focused' : '');
+
+    // Focus indicator strip
+    const focInd = document.createElement('div');
+    focInd.className = 'row-focus-indicator';
+
+    // Label
+    const label = document.createElement('div');
+    label.className = 'row-label';
+    label.textContent = 'row ' + (ri + 1);
+
+    // Step grid
+    const grid = document.createElement('div');
+    grid.className = 'step-grid';
+    const btns = [];
+
+    for (let si = 0; si < NUM_STEPS; si++) {
+      const btn = document.createElement('div');
+      btn.className = 'step-btn' + (si % 4 === 0 && si > 0 ? ' beat-start' : '');
+      btn.addEventListener('click', () => toggleStep(ri, si));
+      btns.push(btn);
+      grid.appendChild(btn);
+    }
+    dom.stepBtns.push(btns);
+
+    // Params
+    const params = document.createElement('div');
+    params.className = 'row-params';
+
+    const chGrp  = makeParamGroup('ch',   rows[ri].channel, 1, 16,  36, ri, 'channel');
+    const ntGrp  = makeParamGroup('note', rows[ri].note,    0, 127, 42, ri, 'note');
+    const volGrp = makeParamGroup('vol',  rows[ri].vol,     0, 127, 42, ri, 'vol');
+
+    const muteBtn = document.createElement('button');
+    muteBtn.className = 'mute-btn';
+    muteBtn.textContent = 'm';
+    muteBtn.addEventListener('click', () => toggleMute(ri));
+    dom.muteEls.push(muteBtn);
+
+    params.appendChild(chGrp.el);
+    params.appendChild(ntGrp.el);
+    params.appendChild(volGrp.el);
+    params.appendChild(muteBtn);
+
+    dom.chanEls.push(chGrp.inp);
+    dom.noteEls.push(ntGrp.inp);
+    dom.volEls.push(volGrp.inp);
+
+    rowEl.appendChild(focInd);
+    rowEl.appendChild(label);
+    rowEl.appendChild(grid);
+    rowEl.appendChild(params);
+
+    dom.rowEls.push(rowEl);
+    dom.seqRows.appendChild(rowEl);
+  }
+}
+
+function makeParamGroup(labelText, initVal, min, max, width, rowIdx, field) {
+  const grp = document.createElement('div');
+  grp.className = 'param-group';
+
+  const lbl = document.createElement('span');
+  lbl.className = 'param-label';
+  lbl.textContent = labelText;
+
+  const inp = document.createElement('input');
+  inp.type  = 'number';
+  inp.className = 'param-input';
+  inp.style.width = width + 'px';
+  inp.min   = min;
+  inp.max   = max;
+  inp.value = initVal;
+  inp.addEventListener('change', () => {
+    rows[rowIdx][field] = clamp(parseInt(inp.value) || 0, min, max);
+    inp.value = rows[rowIdx][field];
+  });
+
+  grp.appendChild(lbl);
+  grp.appendChild(inp);
+  return {el: grp, inp};
+}
+
+function bindUIEvents() {
+  dom.runBtn.addEventListener('click', toggleRun);
+
+  dom.bpmInput.addEventListener('change', () => {
+    S.bpm = clamp(parseInt(dom.bpmInput.value) || 120, 20, 999);
+    dom.bpmInput.value = S.bpm;
+  });
+
+  dom.decPatt.addEventListener('click', decPattern);
+  dom.incPatt.addEventListener('click', incPattern);
+  dom.clearBtn.addEventListener('click', clearPattern);
+
+  dom.chaseCb.addEventListener('change', () => {
+    S.chase = dom.chaseCb.checked;
+    dom.chaseLabel.classList.toggle('active', S.chase);
+  });
+
+  dom.plLength.addEventListener('change', () => {
+    S.playlistLen = clamp(parseInt(dom.plLength.value) || 1, 1, 8);
+    dom.plLength.value = S.playlistLen;
+  });
+
+  dom.plOnCb.addEventListener('change', () => {
+    S.playlistOn = dom.plOnCb.checked;
+    dom.plOnLabel.classList.toggle('active', S.playlistOn);
+  });
+
+  dom.midiSelect.addEventListener('change', () => {
+    midiOut = midiAccess ? (midiAccess.outputs.get(dom.midiSelect.value) || null) : null;
+  });
+
+  document.addEventListener('keydown', handleKeydown);
+}
+
+// ─── UI update functions ──────────────────────────────────────────────────────
+
+function updatePatternBank() {
+  dom.pattBtns.forEach((btn, i) => {
+    btn.classList.toggle('editing', i === S.editPattern);
+    btn.classList.toggle('playing', i === S.playPattern);
+  });
+}
+
+function updatePlaylistActiveBar() {
+  dom.plBarEls.forEach((el, i) => {
+    el.classList.toggle('active', S.playlistOn && i === S.playlistPos);
+  });
+}
+
+function updateRowFocus(rowIdx) {
+  if (dom.rowEls[rowIdx]) {
+    dom.rowEls[rowIdx].classList.toggle('focused', rowIdx === S.selectedRow);
+  }
+}
+
+function updateStepBtn(rowIdx, stepIdx) {
+  const btn = dom.stepBtns[rowIdx][stepIdx];
+  const on  = patterns[S.editPattern][rowIdx][stepIdx] === 1;
+  const playing = stepIdx === S.playStep;
+  btn.classList.toggle('on', on);
+  btn.classList.toggle('playing', playing);
+}
+
+function updateRowStepBtns(rowIdx) {
+  for (let si = 0; si < NUM_STEPS; si++) updateStepBtn(rowIdx, si);
+}
+
+function refreshStepGrid() {
+  for (let ri = 0; ri < NUM_ROWS; ri++) updateRowStepBtns(ri);
+}
+
+function updateRowParamInputs(rowIdx) {
+  dom.chanEls[rowIdx].value = rows[rowIdx].channel;
+  dom.noteEls[rowIdx].value = rows[rowIdx].note;
+  dom.volEls[rowIdx].value  = rows[rowIdx].vol;
+}
+
+function updateMuteBtn(rowIdx) {
+  dom.muteEls[rowIdx].classList.toggle('muted', rows[rowIdx].muted);
+}
+
+function updateLEDs(activeStep) {
+  dom.ledEls.forEach((led, i) => {
+    led.classList.toggle('active', i === activeStep);
+  });
+  // Update step button "playing" column highlight
+  for (let ri = 0; ri < NUM_ROWS; ri++) {
+    for (let si = 0; si < NUM_STEPS; si++) {
+      const btn = dom.stepBtns[ri][si];
+      const on  = patterns[S.editPattern][ri][si] === 1;
+      const playing = si === activeStep;
+      btn.classList.toggle('on', on);
+      btn.classList.toggle('playing', playing);
+    }
+  }
+}
+
+// ─── Animation loop ───────────────────────────────────────────────────────────
+
+function animLoop() {
+  if (audioCtx && S.running) {
+    const now = audioCtx.currentTime;
+    // Drain all steps whose scheduled time has passed
+    while (stepQueue.length && stepQueue[0].time <= now) {
+      const {step} = stepQueue.shift();
+      S.playStep = step;
+      updateLEDs(step);
+    }
+  }
+  requestAnimationFrame(animLoop);
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+  buildUI();
+  initMidi();
+  requestAnimationFrame(animLoop);
+});
+</script>
+</body>
+</html>

@@ -47,15 +47,19 @@ peeq is an 8-row × 16-step MIDI step sequencer with 8 pattern banks and an 8-ba
 
 | Key | Action |
 |-----|--------|
-| `[` | Move focus up one row |
-| `]` | Move focus down one row |
+| `.` | Move focus down one row |
+| `,` | Move focus up one row |
 
 ### Step Entry (for the focused row)
 
+The QWERTY and home-row keys are interleaved by column: each keyboard column maps two consecutive steps, Q-row first, A-row second.
+
 ```
-Q  W  E  R  T  Y  U  I    →  steps  1–8
-A  S  D  F  G  H  J  K    →  steps  9–16
+Q  W  E  R  T  Y  U  I    →  steps  1, 3, 5, 7, 9, 11, 13, 15
+A  S  D  F  G  H  J  K    →  steps  2, 4, 6, 8, 10, 12, 14, 16
 ```
+
+Column pairs: Q+A=1&2, W+S=3&4, E+D=5&6, R+F=7&8, T+G=9&10, Y+H=11&12, U+J=13&14, I+K=15&16.
 
 Each key toggles the corresponding step on or off. The sequencer keeps running while you edit.
 
@@ -64,9 +68,9 @@ Each key toggles the corresponding step on or off. The sequencer keeps running w
 | Key | Pattern loaded |
 |-----|---------------|
 | `1` | Quarter notes — steps 1, 5, 9, 13 |
-| `2` | Eighth notes — all odd steps |
+| `2` | Eighth notes — steps 1, 3, 5, 7, 9, 11, 13, 15 |
 | `3` | 2 & 4 (snare position) — steps 5, 13 |
-| `4` | User-configurable (edit the `keycommands` subpatch) |
+| `4` | User-configurable (edit the `keycommands` subpatch / `MACROS` in index.html) |
 
 ### Per-Row Parameters
 
@@ -74,9 +78,9 @@ Each key toggles the corresponding step on or off. The sequencer keeps running w
 |-----|--------|
 | `'` | Increment MIDI note number |
 | `;` | Decrement MIDI note number |
-| `/` | Increment MIDI channel |
-| `\` | Decrement MIDI channel |
-| `C` | Clear pattern (zero all 16 steps for focused row) |
+| `]` | Increment MIDI channel |
+| `[` | Decrement MIDI channel |
+| `C` | Clear pattern (zeroes all 16 steps for all rows of current pattern) |
 
 ### Playlist
 
