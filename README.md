@@ -1,5 +1,7 @@
 # peeq
 
+![peeq screenshot](peeq1.png)
+
 A keyboard-driven live step sequencer for Pure Data, written in 2003.
 
 Built for live laptop performance — the kind where you are on stage at a breakdancing club with no mouse and no margin for fumbling through menus. Every feature exists to answer the question: how fast can a performer get a musical idea into the sequencer without stopping the music?
