@@ -5,6 +5,7 @@
 <title>peeq :: pd.sequencer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tone@14/build/Tone.js"></script>
 <style>
 :root {
   --bg:           #080810;
@@ -483,6 +484,21 @@ select#midi-output:focus { border-color: var(--amber); }
 .param-input:focus { border-color: var(--amber); }
 .param-input.wide { width: 42px; }
 
+.sound-select {
+  height: 22px;
+  background: var(--inset);
+  border: 1px solid var(--step-border);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 11px;
+  padding: 0 3px;
+  outline: none;
+  cursor: pointer;
+  margin-left: 4px;
+}
+.sound-select:focus { border-color: var(--amber); }
+.sound-select.has-sound { color: var(--teal); border-color: var(--teal); }
+
 .mute-btn {
   width: 22px;
   height: 22px;
@@ -693,6 +709,7 @@ const rows = Array.from({length: NUM_ROWS}, (_, i) => ({
   note:    60,
   vol:     127,
   muted:   false,
+  sound:   'midi',
 }));
 
 // ─── State ───────────────────────────────────────────────────────────────────
@@ -722,10 +739,12 @@ const stepQueue   = [];   // {step, time} for visual sync
 function stepInterval() { return 15 / S.bpm; }   // seconds per 16th note
 
 function scheduleStep(step, time) {
-  // Fire MIDI notes for all unmuted rows
   rows.forEach((row, ri) => {
     if (row.muted) return;
-    if (patterns[S.playPattern][ri][step]) {
+    if (!patterns[S.playPattern][ri][step]) return;
+    if (row.sound !== 'midi') {
+      triggerDrum(row.sound, time, row.vol);
+    } else {
       sendNote(row.channel, row.note, row.vol, time);
     }
   });
@@ -763,7 +782,11 @@ function scheduler() {
 }
 
 function startSeq() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    Tone.setContext(audioCtx);
+    initDrums();
+  }
   if (audioCtx.state === 'suspended') audioCtx.resume();
   S.running    = true;
   nextStep     = 0;
@@ -931,6 +954,66 @@ function handleKeydown(e) {
   }
 }
 
+// ─── Drum synths (Tone.js) ────────────────────────────────────────────────────
+
+const DRUM_SOUNDS = ['midi','kick','snare','chh','ohh','clap','tom','rim'];
+
+let drumsReady = false;
+const D = {};  // sound name → Tone.js synth
+
+function initDrums() {
+  if (drumsReady) return;
+  D.kick = new Tone.MembraneSynth({
+    pitchDecay: 0.05, octaves: 10,
+    envelope: { attack: 0.001, decay: 0.35, sustain: 0, release: 0.1 },
+  }).toDestination();
+
+  D.snare = new Tone.NoiseSynth({
+    noise: { type: 'white' },
+    envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.05 },
+  }).toDestination();
+
+  D.chh = new Tone.MetalSynth({
+    frequency: 400, harmonicity: 5.1, modulationIndex: 32,
+    resonance: 4000, octaves: 1.5,
+    envelope: { attack: 0.001, decay: 0.07, release: 0.01 },
+  }).toDestination();
+
+  D.ohh = new Tone.MetalSynth({
+    frequency: 400, harmonicity: 5.1, modulationIndex: 32,
+    resonance: 4000, octaves: 1.5,
+    envelope: { attack: 0.001, decay: 0.45, release: 0.1 },
+  }).toDestination();
+
+  D.clap = new Tone.NoiseSynth({
+    noise: { type: 'pink' },
+    envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.05 },
+  }).toDestination();
+
+  D.tom = new Tone.MembraneSynth({
+    pitchDecay: 0.08, octaves: 4,
+    envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.1 },
+  }).toDestination();
+
+  D.rim = new Tone.MetalSynth({
+    frequency: 800, harmonicity: 8, modulationIndex: 5,
+    resonance: 5000, octaves: 0.5,
+    envelope: { attack: 0.001, decay: 0.06, release: 0.01 },
+  }).toDestination();
+
+  drumsReady = true;
+}
+
+function triggerDrum(sound, time, velocity) {
+  const synth = D[sound];
+  if (!synth) return;
+  const vel = velocity / 127;
+  if (sound === 'kick')  synth.triggerAttackRelease('C1',  '16n', time, vel);
+  else if (sound === 'tom')   synth.triggerAttackRelease('G2',  '16n', time, vel);
+  else if (sound === 'snare' || sound === 'clap') synth.triggerAttackRelease('16n', time, vel);
+  else synth.triggerAttackRelease(synth.frequency?.value ?? 400, '16n', time, vel);
+}
+
 // ─── MIDI ─────────────────────────────────────────────────────────────────────
 
 let midiAccess = null;
@@ -1083,6 +1166,7 @@ function buildSeqRows() {
   dom.chanEls   = [];
   dom.noteEls   = [];
   dom.volEls    = [];
+  dom.soundEls  = [];
 
   for (let ri = 0; ri < NUM_ROWS; ri++) {
     const rowEl = document.createElement('div');
@@ -1125,6 +1209,22 @@ function buildSeqRows() {
     muteBtn.addEventListener('click', () => toggleMute(ri));
     dom.muteEls.push(muteBtn);
 
+    const soundSel = document.createElement('select');
+    soundSel.className = 'sound-select';
+    DRUM_SOUNDS.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      soundSel.appendChild(opt);
+    });
+    soundSel.value = rows[ri].sound;
+    soundSel.addEventListener('change', () => {
+      rows[ri].sound = soundSel.value;
+      soundSel.classList.toggle('has-sound', soundSel.value !== 'midi');
+    });
+    dom.soundEls.push(soundSel);
+
+    params.appendChild(soundSel);
     params.appendChild(chGrp.el);
     params.appendChild(ntGrp.el);
     params.appendChild(volGrp.el);
