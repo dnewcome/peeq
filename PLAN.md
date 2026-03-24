@@ -472,3 +472,72 @@ Unless there is a specific reason to run peeq.pd as-is (e.g., for archival demon
 4. The work directly advances the arranger project which is already active
 
 A standalone web port of PEEQ (Option A) remains worth doing as a self-contained pedagogical or archival project — a clean, dependency-free step sequencer in a single HTML file.
+
+---
+
+## UI Ideas: Step Visualization and Editing
+
+### Nudge with Semi-Transparent Step Offsets
+
+Steps can be nudged (micro-timed) forward or backward relative to the grid. Rather than hiding this offset or only showing it as a number, render nudged steps as a **semi-transparent ghost** of the step button shifted left or right across the cell. The ghost's horizontal position within the cell represents the timing offset — centered = on-grid, shifted right = late, shifted left = early. This gives instant visual feedback on groove without requiring a separate view or mode.
+
+This parallels how DAW piano rolls show note position within a quantize grid, but adapted to the per-step button layout of peeq.
+
+### CC Overlay as Mini Bar Graph
+
+Each step cell can optionally display a small vertical bar graph overlay showing one or more CC (continuous controller) values assigned to that step. The bar sits inside the step button — perhaps in the lower portion — and its height maps to the CC value (0–127). Multiple CCs could be shown as adjacent micro-bars.
+
+This makes trig locks and per-step modulation (velocity, filter cutoff, etc.) immediately visible on the main grid without entering a separate CC editing mode. It also works well with the accent/ghost scheme: if accent is CC 1 and ghost is a low-velocity flag, both are readable at a glance.
+
+### Paste-with-Edit
+
+When pasting a row (via `p`), instead of immediately committing the pasted steps, enter an **ephemeral edit mode** where the pasted content is shown in a "pending" state (distinct color or outline) and the step keys can be used to toggle individual steps before confirming. `Enter` commits, `Escape` cancels without modifying the row.
+
+This allows paste to serve as a starting point for a variation rather than just an exact copy — similar to how some DAWs let you paste-and-immediately-edit without an undo cycle.
+
+### Paste-with-Merge
+
+A companion to paste-with-edit: instead of replacing the destination row, **merge** the yanked pattern with the existing one. The default merge is OR (a step fires if it was on in either the source or destination). Optionally, XOR merge could toggle steps that are already on — turning the paste into a "flip" operation.
+
+Possible binding: `gp` for merge-paste (following vim's `g`-prefix convention for variant operations), keeping plain `p` as the replace-paste.
+
+---
+
+## Cue / Preview
+
+### The Core Idea
+
+In a DJ setup, the headphone cue is a secondary mix bus — the same audio, routed separately, audible only to the performer. The main bus goes to the PA; the cue bus goes to the headphones. For a MIDI sequencer the equivalent is a secondary MIDI output: a different port, or a different channel on the same port, routed to a monitor source the audience doesn't hear (a second sound module, a headphone synth, a DAW track with a separate output).
+
+The sequencer itself doesn't need to do anything special with timing — everything runs off the same clock. The cue is purely a routing decision: which output does this row's note data go to right now?
+
+### What It Enables
+
+The primary value is **risk-free experimentation during live performance**. If the set is well-rehearsed, the cue is mostly an insurance policy. If the performance is radically improvised, the cue is what makes genuine risk-taking viable — you can try something genuinely strange, hear it in context, and either commit it or discard it before the audience knows anything happened.
+
+This changes the performance psychology in a meaningful way. Without cue, every edit is public. With cue, you have a private scratchpad that runs in real time. The cost of a bad idea drops to zero; the cost of a good idea is just the commit gesture.
+
+The flip side: a safety net can soften a performance. Some of what makes live music compelling is the performer's commitment to a choice, including risky ones. The design should make committing easy and natural — cue is for preparation, not avoidance.
+
+### MIDI Routing Model
+
+Each row has a designated output: **main** or **cue**. In practice this is a second MIDI port or a reserved MIDI channel (e.g., channels 1–8 = main, channels 9–16 = cue, with a physical split at the hardware level). The performer's monitoring setup determines what the cue channel feeds — a headphone synth, a second module, a DAW track routed to headphone output.
+
+Switching a row between main and cue is a property of the row's output assignment, not a change to the pattern itself. The step data, note, and velocity are unchanged.
+
+### The Commit Gesture
+
+When something sounds right in the cue, the performer commits it — moving that row's output back to main. Two modes worth supporting:
+
+- **Bar-quantized commit** (default): consistent with the legato-switching philosophy; the row switches to main at the next bar boundary
+- **Immediate commit**: Alt+commit for deliberate instant cuts
+
+The vim parallel is loose but present: editing in cue is like working in a buffer that hasn't been written to disk. Commit is `:w`. The difference from vim is that the buffer is already running in real time — you're hearing the edit as you make it, just not on the main output.
+
+### Keyboard Interface
+
+A natural binding: `c` as a prefix or modifier to toggle the current row's output between main and cue. Visual distinction in the UI — cue rows shown in a muted or differently-colored state so the performer always knows which rows are live and which are in preview. A dedicated commit key (possibly `Enter`, already associated with section advance) could move all cue-routed rows to main simultaneously — a single gesture to "publish" everything currently in the private scratchpad.
+
+### Scope: Per-Row vs. Per-Pattern
+
+Per-row cue is the more surgical and probably more useful option live — swap out a single instrument in headphones while the groove continues. Per-pattern cue (shadow-auditioning an entire 8-row pattern before committing) is more radical and essentially equivalent to having a second sequencer instance running in parallel. Both are worth supporting eventually; per-row is the right starting point.
