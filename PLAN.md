@@ -378,6 +378,90 @@ The underlying philosophy is identical: the performer should be able to make mus
 
 ---
 
+## Vim-Style Keyboard Evolution
+
+### Why Vim Now
+
+The original peeq keyboard layout was designed in 2003 by someone who was not yet a heavy vim user. The choices made sense at the time: comma/period for row navigation, QWERTY interleaved with home-row for steps. They were pragmatic, not philosophically grounded.
+
+The current thinking: lean into vim-style bindings throughout. `j`/`k` for row navigation is already second nature from years of daily vim use. The question is how far to extend the idiom, and where the sequencer's domain model diverges from a text editor's in ways that make vim semantics awkward or misleading.
+
+### The h/l Tension
+
+`h`/`l` in vim move left and right by character. In peeq that maps to two different ideas:
+
+**Option 1: Pattern navigation (current implementation)**
+`h` = previous pattern, `l` = next pattern. This is clean and consistent with the transport metaphor. Patterns are like "pages" and you're moving between them.
+
+**Option 2: Column/step selection**
+`h`/`l` move a cursor left and right across the 16 steps of the focused row. This requires introducing the concept of a *selected step* — which currently does not exist. Right now the keyboard toggles steps directly; there is no selection cursor.
+
+The tradeoff: Option 1 is simpler and already works. Option 2 enables a lot more — trig locks, accents, per-step editing — but it introduces selection state that has to be displayed, managed, and escaped from.
+
+A possible resolution: `h`/`l` for patterns, and a separate mechanism (maybe `Tab` or entering a step-edit mode) to move a column cursor. This keeps the main navigation modal and avoids cluttering the always-on keyboard state.
+
+### Trig Locks and Accents
+
+The question of whether accents are per-trig or per-column is a design decision with musical implications:
+
+**Per-column accent:** every time step 5 fires across any row, it fires accented. Simple, no additional data structure, maps cleanly to a velocity column. Less expressive: you can't have a kick accent without also accenting everything else on beat 2.
+
+**Per-trig accent:** each individual enabled step cell can independently be accented, normal, or ghost. This is how the Elektron boxes do it (trig locks). More expressive, but requires the step data model to grow from `uint1` (on/off) to at least `uint2` or a richer struct.
+
+The current data model stores steps as 0/1 floats. Adding a second bit of information (accent) would mean either:
+- A parallel accent array alongside the step array (same shape, easy to add)
+- Encoding accent into the step value: 0=off, 1=on, 2=accented (simple, backward-compatible as long as >0 = on)
+
+If we go per-trig, the keyboard question becomes: how do you accent a step you're toggling? Options:
+- Shift+stepkey toggles accent on an already-enabled step
+- A separate accent mode (hold a modifier, then tap step keys) — similar to Elektron's function key
+- `v` enters visual/accent mode for the focused step, then you mark accents, then escape
+
+### Save/Load and Pattern Banks
+
+The original peeq had no save/load — patterns were lost when PD closed. This was a known gap even in 2003. For the web version the natural solutions are:
+
+- `localStorage` for auto-save on every change (no user action required, survives page refresh)
+- JSON export/import for named saves — a "save slot" model where you can snapshot and restore entire sessions
+- Multiple named banks: a bank is a set of 8 patterns + per-row settings (note, channel). Switching banks mid-performance is a macro-level pattern change.
+
+The keyboard interface for this is not obvious. `s` is already used as a step key. One approach: a command prefix key (`:` in vim, or a dedicated `Escape`-then-letter sequence) for session operations that aren't needed during performance.
+
+### Copy/Paste: yy and p
+
+Vim's `yy` (yank line) / `p` (put) maps naturally onto row copy/paste:
+
+- `yy` yanks the focused row's 16-step pattern into a register
+- `p` pastes it onto the focused row (replacing existing steps)
+- `P` could paste onto the row above (vim convention for paste-before)
+
+The interesting extension: **the yank register doubles as the macro source**. Right now macros are hardcoded (quarter notes, eighth notes, 2&4). If `yy` writes into a named register and macros are just named registers that happen to be bound to number keys, then:
+- You play a fill, yank it with `yy`, and it becomes available as macro `4` (user slot)
+- Or you build a library: `"ayy` yanks into register `a`, and pressing some prefix+`a` replays it
+- This unifies the macro system and the clipboard — they're the same thing
+
+This is a significant design move. It means the macro keys (1–4) become register slots, and `yy` / `"a yy` are the way to populate them live.
+
+### Visual Line Mode
+
+Vim's `V` (visual line) selects whole lines; you can then yank, delete, or operate on the selection. For peeq this would mean:
+
+- `V` enters visual row mode from the currently focused row
+- `j`/`k` extend the selection down/up
+- `y` yanks all selected rows as a multi-row block
+- `p` pastes the block starting at the focused row
+
+Use cases: copy a 3-row groove (kick, snare, hh) and paste it to a different set of rows, or into a different pattern. This is the "copy section" operation that currently has no keyboard equivalent.
+
+Open questions:
+- Does visual mode select within a pattern or across patterns?
+- What does `d` (delete) do in visual row mode — clear all selected rows? That's a destructive operation worth a confirm.
+- Does the yanked block preserve row settings (note, channel) or just the step data?
+
+The complexity cost is real. Visual mode adds a modal layer that has to be visible in the UI and escapable. It may be worth implementing basic `yy`/`p` first and seeing whether multi-row selection actually comes up in practice before building the full visual mode machinery.
+
+---
+
 ## Decision: Web Rewrite vs. WebPD
 
 Unless there is a specific reason to run peeq.pd as-is (e.g., for archival demonstration), the web rewrite (Option A) or the tidal-arranger integration (Option C) are both more productive paths. Option C is recommended as the first move because:
