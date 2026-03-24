@@ -220,6 +220,20 @@ select#midi-output:focus { border-color: var(--amber); }
 }
 .patt-btn.playing .play-dot { background: var(--red); box-shadow: 0 0 4px var(--red); }
 
+.patt-btn .data-rows {
+  display: flex;
+  gap: 1px;
+  flex-shrink: 0;
+}
+.patt-btn .data-rows span {
+  width: 2px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--step-border);
+}
+.patt-btn .data-rows span.lit { background: var(--teal); }
+.patt-btn.editing .data-rows span.lit { background: var(--amber); }
+
 /* Arrow + clear buttons */
 .arrow-btn, .clear-btn {
   width: 28px;
@@ -792,17 +806,20 @@ function decPattern() { setEditPattern(S.editPattern - 1); }
 function clearRow() {
   patterns[S.editPattern][S.selectedRow].fill(0);
   updateRowStepBtns(S.selectedRow);
+  updatePatternBank();
 }
 
 function clearPattern() {
   patterns[S.editPattern].forEach(row => row.fill(0));
   refreshStepGrid();
+  updatePatternBank();
 }
 
 function toggleStep(rowIdx, stepIdx) {
   const p = patterns[S.editPattern][rowIdx];
   p[stepIdx] ^= 1;
   updateStepBtn(rowIdx, stepIdx);
+  updatePatternBank();
 }
 
 // ─── Row selection ────────────────────────────────────────────────────────────
@@ -864,6 +881,7 @@ function applyMacro(key) {
   const row = patterns[S.editPattern][S.selectedRow];
   steps.forEach(s => { row[s] = 1; });
   updateRowStepBtns(S.selectedRow);
+  updatePatternBank();
 }
 
 // ─── Key mapping ──────────────────────────────────────────────────────────────
@@ -1001,9 +1019,15 @@ function buildPatternBank() {
     num.textContent = i;
     const dot = document.createElement('div');
     dot.className = 'play-dot';
+    const rows = document.createElement('div');
+    rows.className = 'data-rows';
+    for (let r = 0; r < NUM_ROWS; r++) {
+      rows.appendChild(document.createElement('span'));
+    }
 
     btn.appendChild(num);
     btn.appendChild(dot);
+    btn.appendChild(rows);
     btn.addEventListener('click', () => setEditPattern(i));
 
     dom.pattBtns.push(btn);
@@ -1185,6 +1209,10 @@ function updatePatternBank() {
   dom.pattBtns.forEach((btn, i) => {
     btn.classList.toggle('editing', i === S.editPattern);
     btn.classList.toggle('playing', i === S.playPattern);
+    const dots = btn.querySelectorAll('.data-rows span');
+    patterns[i].forEach((row, r) => {
+      dots[r].classList.toggle('lit', row.some(v => v));
+    });
   });
 }
 
