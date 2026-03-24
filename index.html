@@ -12,9 +12,9 @@
   --panel:        #131320;
   --panel-border: #22223a;
   --inset:        #0a0a16;
-  --text:         #7070a0;
-  --text-bright:  #b0b0d8;
-  --text-dim:     #3a3a60;
+  --text:         #a0a0cc;
+  --text-bright:  #d8d8f8;
+  --text-dim:     #6060a0;
   --amber:        #e89000;
   --amber-bright: #ffaa10;
   --amber-dim:    #3a2800;
@@ -40,14 +40,14 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: 'Share Tech Mono', monospace;
-  font-size: 13px;
+  font-size: 16px;
   min-height: 100vh;
-  padding: 12px;
+  padding: 16px;
   user-select: none;
 }
 
 #app {
-  max-width: 980px;
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -617,12 +617,15 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
   <div class="keyref">
     <div class="keyref-title">keyboard reference</div>
     <div class="key-entry"><kbd>spc</kbd><span>start / stop (resets position)</span></div>
+    <div class="key-entry"><kbd>h</kbd><span>prev pattern</span></div>
+    <div class="key-entry"><kbd>l</kbd><span>next pattern</span></div>
+    <div class="key-entry"><kbd>j</kbd><span>move row focus down</span></div>
+    <div class="key-entry"><kbd>k</kbd><span>move row focus up</span></div>
+    <div class="key-entry"><kbd>x</kbd><span>clear focused row</span></div>
+    <div class="key-entry"><kbd>X</kbd><span>clear current pattern</span></div>
+    <div class="key-entry"><kbd>L</kbd><span>toggle playlist</span></div>
     <div class="key-entry"><kbd>+</kbd><span>next pattern (legato)</span></div>
     <div class="key-entry"><kbd>-</kbd><span>prev pattern (legato)</span></div>
-    <div class="key-entry"><kbd>.</kbd><span>move row focus down</span></div>
-    <div class="key-entry"><kbd>,</kbd><span>move row focus up</span></div>
-    <div class="key-entry"><kbd>c</kbd><span>clear current pattern</span></div>
-    <div class="key-entry"><kbd>l</kbd><span>toggle playlist</span></div>
     <div class="key-entry"><kbd>]</kbd><span>inc channel of focused row</span></div>
     <div class="key-entry"><kbd>[</kbd><span>dec channel of focused row</span></div>
     <div class="key-entry"><kbd>'</kbd><span>inc note of focused row</span></div>
@@ -632,9 +635,20 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
     <div class="key-entry"><kbd>3</kbd><span>macro: 2 &amp; 4</span></div>
     <div class="key-entry"><kbd>4</kbd><span>macro: user (edit in JS)</span></div>
     <div class="key-entry" style="grid-column:1/-1">
-      <kbd>q</kbd><kbd>a</kbd><kbd>w</kbd><kbd>s</kbd><kbd>e</kbd><kbd>d</kbd><kbd>r</kbd><kbd>f</kbd>
-      <kbd>t</kbd><kbd>g</kbd><kbd>y</kbd><kbd>h</kbd><kbd>u</kbd><kbd>j</kbd><kbd>i</kbd><kbd>k</kbd>
-      <span>toggle steps 1–16 of focused row (column pairs: Q+A=1&2, W+S=3&4 …)</span>
+      <kbd>q</kbd><kbd>w</kbd><kbd>e</kbd><kbd>r</kbd>
+      <span>steps 2,6,10,14</span>
+    </div>
+    <div class="key-entry" style="grid-column:1/-1">
+      <kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd><kbd>R</kbd>
+      <span>steps 4,8,12,16</span>
+    </div>
+    <div class="key-entry" style="grid-column:1/-1">
+      <kbd>a</kbd><kbd>s</kbd><kbd>d</kbd><kbd>f</kbd>
+      <span>steps 1,5,9,13</span>
+    </div>
+    <div class="key-entry" style="grid-column:1/-1">
+      <kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><kbd>F</kbd>
+      <span>steps 3,7,11,15</span>
     </div>
   </div>
 
@@ -775,6 +789,11 @@ function setEditPattern(idx) {
 function incPattern() { setEditPattern(S.editPattern + 1); }
 function decPattern() { setEditPattern(S.editPattern - 1); }
 
+function clearRow() {
+  patterns[S.editPattern][S.selectedRow].fill(0);
+  updateRowStepBtns(S.selectedRow);
+}
+
 function clearPattern() {
   patterns[S.editPattern].forEach(row => row.fill(0));
   refreshStepGrid();
@@ -849,11 +868,13 @@ function applyMacro(key) {
 
 // ─── Key mapping ──────────────────────────────────────────────────────────────
 
-// Each column-pair (q+a, w+s, ...) maps to two consecutive steps.
-// q→0, a→1, w→2, s→3, e→4, d→5, r→6, f→7, t→8, g→9, y→10, h→11, u→12, j→13, i→14, k→15
+// qwer → steps 1,5,9,13   QWER → steps 3,7,11,15
+// asdf → steps 2,6,10,14  ASDF → steps 4,8,12,16
 const STEP_KEYS = {
-  q:0, a:1, w:2, s:3, e:4, d:5, r:6, f:7,
-  t:8, g:9, y:10, h:11, u:12, j:13, i:14, k:15,
+  q:1,  w:5,  e:9,  r:13,
+  Q:3,  W:7,  E:11, R:15,
+  a:0,  s:4,  d:8,  f:12,
+  A:2,  S:6,  D:10, F:14,
 };
 
 function handleKeydown(e) {
@@ -866,10 +887,13 @@ function handleKeydown(e) {
     case ' ':       e.preventDefault(); toggleRun();    return;
     case '+': case '=': incPattern();                   return;
     case '-':       decPattern();                       return;
-    case 'c': case 'C': clearPattern();                 return;
-    case '.':       incRow();                           return;
-    case ',':       decRow();                           return;
-    case 'l': case 'L': togglePlaylist();               return;
+    case 'x':           clearRow();                      return;
+    case 'X':           clearPattern();                  return;
+    case 'j': case '.': incRow();                       return;
+    case 'k': case ',': decRow();                       return;
+    case 'l':           incPattern();                    return;
+    case 'h':           decPattern();                    return;
+    case 'L':           togglePlaylist();                return;
     case ']':       incChannel();                       return;
     case '[':       decChannel();                       return;
     case "'":       incNote();                          return;
@@ -877,10 +901,9 @@ function handleKeydown(e) {
   }
 
   // Step keys
-  const lk = key.toLowerCase();
-  if (lk in STEP_KEYS) {
+  if (key in STEP_KEYS) {
     e.preventDefault();
-    toggleStep(S.selectedRow, STEP_KEYS[lk]);
+    toggleStep(S.selectedRow, STEP_KEYS[key]);
     return;
   }
 
