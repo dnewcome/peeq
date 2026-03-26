@@ -1,6 +1,8 @@
 id = "a2f1c847-5e3b-4d92-b8a0-1d6e7f3c9b21"
 slug = "peeq"
 name = "peeq"
+description = "A keyboard-driven live step sequencer for Pure Data, written in 2003"
+tags = ["music", "sequencer", "pure-data", "live-performance", "browser"]
 
 [demo]
 type = "web"
