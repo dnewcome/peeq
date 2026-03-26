@@ -1,0 +1,7 @@
+id = "a2f1c847-5e3b-4d92-b8a0-1d6e7f3c9b21"
+slug = "peeq"
+name = "peeq"
+
+[devlog]
+version = "v1.1"
+source = "https://github.com/dnewcome/devlog-tools"
